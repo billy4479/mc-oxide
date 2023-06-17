@@ -1,0 +1,6 @@
+server_dir: test-dir
+server_gui: false
+auto_eula: true
+memory_max_mb: 4096
+git_integration: true
+lockfile: true
