@@ -1,0 +1,16 @@
+[package]
+name = "cxx-bindings"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+cxx = "1.0"
+mc-oxide = { path = "../mc-oxide" }
+tokio = { workspace = true }
+lazy_static = { workspace = true }
+
+[build-dependencies]
+cxx-build = "1.0"
