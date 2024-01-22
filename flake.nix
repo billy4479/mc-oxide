@@ -1,34 +1,48 @@
 {
   description = "MC-Oxide";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
 
-  outputs = { self, nixpkgs }:
-    let
-      supportedSystems = [ "x86_64-linux" ]; # TODO: add more systems as they are supported
-      forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
-        pkgs = import nixpkgs { inherit system; };
-      });
-    in
-    {
-      devShells = forEachSupportedSystem ({ pkgs }: {
+  outputs = {
+    self,
+    nixpkgs,
+    fenix,
+    flake-utils,
+  }:
+    flake-utils.lib.eachDefaultSystem (system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+      toolchain = fenix.packages.${system}.complete;
+    in {
+      devShells = {
         default = pkgs.mkShell {
-          shellHook = ''
-            export CMAKE_GENERATOR=Ninja
-          '';
-          packages = with pkgs; [
-            llvmPackages_latest.clang-unwrapped
+          CMAKE_GENERATOR = "Ninja";
+
+          nativeBuildInputs = with pkgs; [
+            clang-tools
             cmake
             ninja
             pkg-config
+            (toolchain.withComponents [
+              "cargo"
+              "rustc"
+              "rust-src"
+              "rustfmt"
+              "clippy"
+            ])
+          ];
 
-            cargo
-            rustc
-
+          buildInputs = with pkgs; [
             qt6.qtbase
             qt6.qtwayland
           ];
         };
-      });
-    };
+      };
+    });
 }
